@@ -54,26 +54,91 @@ myPuts:
     pop ebp
     ret
 
-myPutd:
-    push ebp
-    mov ebp, esp
+myPutd: ;PRINT A DEC NUM GIVEN THROUGH EAX - 2nd attempt
+    push ebp        ;<ebp>
+    mov ebp, esp    ;point ebp at esp
+    push ebx        ;<ebx>
+    push ecx        ;<ecx>
     
-    mov ebx, eax
-    
-.loop:
-    cmp ebx, 0
+    xor ecx, ecx    ;clear ecx
+    mov ebx, eax    ;copy eax 'input' to ebx
     jmp .loop
+.loop:
+    cmp ebx, 9
+    jg .pushStack
     
-    pop ebp
-    ret
+    cmp ecx, 0
+    jne .popStack
+    ;jmp .end
+.end:
+    pop ecx         ;>/ecx>
+    pop ebx         ;</ebx>
+    pop ebp         ;</ebp>
+    ret             ;return ; oh this ends weirdly becauise i pushed a whole bunch
+.pushStack:
+    push ebx        ;store last value on stack
+    inc ecx         ;count pushes
+    
+    xor edx, edx    ;clear remainder
+    mov eax, ebx    ;prep dividend
+    mov esi, 10     ;prep divisor   - why am i using ecx? i need that
+    div esi         ; I subbed esi for ecx
+    mov ebx, eax    ;put quotient into ebx  
+    
+    jmp .loop
 
+.popStack:;mult thisidsf hths 
+    mov eax, 4
+    mul ecx         ;get how far up to look on eax
+    mov ebx, eax
+    ;im gonna use esi 
+    add esp, ebx    ;this should go up 4 * ecx times
+    
+    mov eax, 10
+    mul ecx         ;get ecx * 10
+    mov esi, eax    ;get the divisor
+    mov eax, dword[esp]  ;might need dword before [] it crashes here
+    
+    xor edx, edx    ;now i need the remainder of this after dividing by ecx*10
+    div esi         ;divide eax by esi
+    mov esi, edx    ;put the remainder on ebx
+    
+    add esi, 48
+    push esi
+    call putchar
+    pop esi
+    
+    sub esp, ebx ; this is trying to move my pointer back down, but ebx is nuked
+    dec ecx
+    
+    cmp ecx, 0
+    jne .popStack
+    
+    cmp ecx, 0
+    je .end
+    
+    
+    ;mov ebx, [esp]
+    
+    ;jmp .end
+    
+    ;jmp .end ; was just doing this to test something. 
+    
+    
+    ;add ebx, 48
+    ;push ebx
+    ;call putchar
+    ;pop ebx
+    
+    
+    
 main:
     mov ebp, esp ; EBP now marks the beginning of our stack frame
 
     mov eax, hello
     call myPuts
     
-    mov eax, 54321
+    mov eax, 321
     call myPutd
     
     ;call ovahwiteHerro
