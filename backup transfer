@@ -1,0 +1,153 @@
+;EXTERN puts ; we are going to link in this function from the C standard library
+EXTERN putchar ; we are going to link in this function from the C standard library
+
+; Define variables in the data section
+SECTION .data
+	hello: db 'Hello world! ',0 ; a 0 (NUL) terminated string, and a label to it's address
+
+; Code goes in the text section
+SECTION .text
+	GLOBAL main ; we are advertising this function as provided by this file
+ovahwiteHerro:
+    push ebp
+    mov ebp, esp
+    push ebx
+    push edx
+    
+    mov eax, 11
+    mov ebx, hello
+.loop:
+    movzx edx, byte [ebx]
+    cmp edx, 'l'
+    jne .skip
+    mov byte [ebx], '*'
+.skip:
+    
+    inc ebx ; char ptr
+    dec eax ; count-down from 11
+    jnz .loop ; loop if not finished counting
+    
+    pop edx
+    pop ebx
+    pop ebp
+    ret
+
+myPuts:
+    push ebp
+    mov ebp, esp
+    push ebx
+    mov esi, eax
+.loop:
+    movzx ebx, byte [esi]   ;put a byte from eax onto ebx
+    inc esi
+
+    cmp ebx, 0              ;see if it's a space
+    jz .end                 ;go back to loop if not space
+
+    push ebx
+    call putchar            ;put that char brah
+    add esp, 4
+    jmp .loop
+
+.end:
+    pop ebx
+    pop ebp
+    ret
+
+myPutd: ;PRINT A DEC NUM GIVEN THROUGH EAX - 2nd attempt
+    push ebp        ;<ebp>
+    mov ebp, esp    ;point ebp at esp
+    
+    mov ecx, 1      ;set ecx to 1                                               -- do i have to do this
+    mov ebx, eax    ;copy eax 'input' to ebx
+    push ebx        ;putting this at the top of the stack to take later<
+    jmp .eval
+.eval:
+    cmp ebx, 9      ;is ebx single digit?
+    jg .findSize    ;go-to get smaller.
+    
+    ;mov ebx, ecx    ;tmp set for power
+    push ecx        ;store the found size
+    mov edi, 10     ;set this to 10 for maths in power
+    mov esi, 1
+    jmp .getPower   ;go-to getPower.
+.findSize:
+    inc ecx         ;++counter
+    xor edx, edx    ;clear edx (remainder)
+    mov eax, ebx    ;set dividend
+    mov esi, 10     ;set divisor
+    div esi         ;get quotient
+    mov ebx, eax    ;set quotient to ebx
+    jmp .eval       ;go-to evaluate
+.getPower:              ; make sure ebx holds the val of ecx
+    cmp ecx, 1
+    jle  .prepNum
+    xor edx, edx    ;clear edx (remainder)
+    mov eax, esi     ;set 10 * ecx it needs to be ^
+    mul edi          ;might have to have this in a register
+    ;div edi
+    mov esi, eax    ;set esi to product - this can be nuked
+    dec ecx
+    
+    cmp ecx, 0      ;see if you're big enough
+    jg  .getPower   ;keep going if you're not
+    pop ecx         ;restore the found size from findSize
+    jmp .prepNum    ;continue
+    
+.prepNum:
+    pop ebx         ;make an if in putNum to push this back if getting another power
+    jmp .putNum
+.putNum:
+    xor edx, edx    ;clear edx (remainder)
+    mov eax, ebx 
+    div esi
+
+    dec ecx
+    mov ebx, edx    ;setting remainder to ebx
+    
+    push esi
+    push ebx    ;test
+    push ecx
+    
+    add eax, 48     ;convert to ascii
+    push eax
+    
+    call putchar
+    pop eax;do i need this?
+    pop ecx
+    pop ebx
+    pop esi
+
+    cmp ecx, 0      ;was that all?
+    je  .end        ;gtfo
+        
+    xor edx, edx    ;clear remainder
+    mov eax, esi    ;set dividend
+    mov edi, 10     ;set divisor
+    div edi         ;lower by 10
+    mov eax, esi    ;set esi to the quotient
+    jmp .putNum     ;keep going
+
+.end:
+    ;pop ecx         ;>/ecx>
+    ;pop ebx         ;</ebx>
+    pop ebp         ;</ebp>
+    ret             ;return ; oh this ends weirdly becauise i pushed a whole bunch
+
+main:
+    mov ebp, esp ; EBP now marks the beginning of our stack frame
+
+    mov eax, hello
+    call myPuts
+    
+    mov eax, 4321
+    call myPutd
+    
+    ;call ovahwiteHerro
+    
+    ;push hello ; put 4 byte pointer on the stack
+    ;call puts  ; call puts() from C standard library
+    ;add esp, 4 ; clean up stack
+    
+    mov eax, 0 ; set EAX as a return value (0 for success)
+    ret
