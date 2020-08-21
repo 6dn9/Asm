@@ -32,45 +32,84 @@ myPuts:
     ret
 
 myPutd:
+    ;DEFAULT START
     push ebp        ;<ebp>
     mov  ebp, esp   ;set ebp to esp
     
-    mov  ebx, eax    ;Copy 'eax input' to ebx
-    mov  ecx, 1     ;at least one digit
+    ;PREPARE FUNCTION
+    mov  ebx, eax   ;Copy 'eax input' to ebx
+    mov  ecx, 1     ;Print at least once
     push ebx
-    jmp .evaluate
-.evaluate:
-    cmp ebx, 9      ;Check if it's single digit
-    jle .print
-    jg  .sizeOf
+    ;jmp .evaluate
     
-    pop  ebx
-    push ebx
-    jmp
+.evaluate:
+    ;FIND LENGTH
+    cmp ebx, 9      ;Check if it's single digit
+    jle .printEvaluate      ;If it's less than 9, print
+    
+
+    ;jg  .sizeOf     ;--Can I do this without running another cmp
+    ;p ebx         ;get the old ebx number
     
 .sizeOf:
-    inc ecx ;I need to make sure that 
-    
+    mov esi, 10     ;--Can I use just 10 instead of esi for div and mul
+        
+    ;DIVIDE ORIGINAL
     xor edx, edx
     mov eax, ebx
-    mov esi, 10
-    div esi
+    div esi         ;number
     mov ebx, eax
+    
+    ;KEEP TRACK
+    xor edx, edx
+    mov eax, ecx
+    mul esi         ;number
+    mov ecx, eax
+    
     jmp .evaluate
-   
+
+.printEvaluate:
+
+    pop ebx
+    push ebx        ;backup the real ebx
+    ;cmp ecx, 1      ;If the number was counter to 
+    ;jg .makeSmall   ;Get smaller
+    ;jle .print      ;If the counter was 1 or less, print
+
+.makeSmall:
+    mov esi, 10     ;--Can I use just 10 instead of esi for div and mul
+    
+    ;SHRINK THE NUMBER
+    xor edx, edx
+    mov eax, ebx
+    div ecx
+    mov ebx, eax
+    mov edi, edx        ;store the remainder on edi
+    
+    ;SHRINK THE SHRINK :)
+    xor edx, edx
+    mov eax, ecx
+    div esi
+    mov ecx, eax
+    
+    jmp .print
+    
+           
 .print:
-    ;pop ebx
-    ;push ebx
+    ;push ebx        ;save the num before adding
     add ebx, 48     ;convert ebx to ascii
-    push ecx
-    push ebx
+    push edi        ;put the next numbah up
+    push ecx        ;save the counter
+    push ebx        ;give putchar the ebx.
     call putchar
     pop ebx
     pop ecx
-    dec ecx
+    pop edi
+    
+    mov ebx, edi    ;set the previous remainder 
     cmp ecx, 0
     je .exit
-    ;jmp .sizePrint
+    jmp .makeSmall
 
 .exit:
     pop ebx
@@ -84,7 +123,7 @@ main:
     mov eax, hello
     call myPuts
     
-    mov eax, 6
+    mov eax, -1034
     call myPutd
     
     mov eax, 0 ; set EAX as a return value (0 for success)
